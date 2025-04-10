@@ -2,6 +2,11 @@ import wppconnect from '@wppconnect-team/wppconnect';
 import express from 'express';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
+import dotenv from 'dotenv';
+
+import { analyzeAndSummarizeWithGemini } from './services/geminiService.js'; // 
+dotenv.config();
+
 
 // Configuração para __dirname em ES Modules
 const __filename = fileURLToPath(import.meta.url);
