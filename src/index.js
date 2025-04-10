@@ -131,3 +131,15 @@ process.on('SIGINT', async () => {
   process.exit(0);
 });
 
+process.on('SIGTERM', async () => {
+  console.log('Recebido SIGTERM. Desconectando o cliente WhatsApp...');
+   if (client) { // Verifica se 'client' foi inicializado
+      try {
+          await client.close();
+          console.log('Cliente WhatsApp desconectado.');
+      } catch (e) {
+          console.error('Erro ao desconectar o cliente:', e);
+      }
+  }
+  process.exit(0);
+});
