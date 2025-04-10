@@ -1,6 +1,8 @@
 {
   "dependencies": {
+    "@google/generative-ai": "^0.24.0",
     "@wppconnect-team/wppconnect": "^1.36.4",
+    "dotenv": "^16.5.0",
     "express": "^5.1.0",
     "puppeteer": "^21.9.0"
   },
