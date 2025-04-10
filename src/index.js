@@ -42,6 +42,9 @@ try {
         '--disable-dev-shm-usage'
       ]
     },
+    browserSessionToken: {
+      folderName: `${__dirname}/src/session_token`, // Pasta específica para tokens
+    },
     catchQR: (base64Qr, asciiQR) => {
       console.log('Escaneie o QR Code abaixo para conectar:');
       console.log(asciiQR);
