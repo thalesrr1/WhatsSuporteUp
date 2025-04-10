@@ -117,4 +117,17 @@ try {
   process.exit(1);
 }
 
+// --- Tratamento de Encerramento Gracioso (Opcional mas recomendado) ---
+process.on('SIGINT', async () => {
+  console.log('Recebido SIGINT. Desconectando o cliente WhatsApp...');
+  if (client) { // Verifica se 'client' foi inicializado
+      try {
+          await client.close();
+          console.log('Cliente WhatsApp desconectado.');
+      } catch (e) {
+          console.error('Erro ao desconectar o cliente:', e);
+      }
+  }
+  process.exit(0);
+});
 
