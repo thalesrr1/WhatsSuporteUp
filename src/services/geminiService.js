@@ -25,7 +25,6 @@ async function analyzeAndSummarizeWithGemini(userMessage) {
         return "Por favor, forneça uma mensagem para análise.";
     }
 
-    // Instrução clara para o Gemini
     const prompt = `
     Analise a seguinte mensagem de um usuário buscando suporte ou informação.
     Seu objetivo é retornar uma resposta direta, clara e resumida para a pessoa que está prestando o suporte.
@@ -37,7 +36,7 @@ async function analyzeAndSummarizeWithGemini(userMessage) {
     "${userMessage}"
 
     Sua análise resumida:
-  `;
+`;
 
     console.log(`[Gemini Service] Enviando prompt para análise...`);
 
@@ -46,13 +45,13 @@ async function analyzeAndSummarizeWithGemini(userMessage) {
         const response = result.response;
         const text = response.text();
         console.log(`[Gemini Service] Resposta recebida.`);
-        // Simplesmente retorna o texto gerado, que já deve estar formatado pelos tópicos
+        // Retorna o texto gerado, que já deve estar formatado pelos tópicos
         return text;
     } catch (error) {
         console.error("[Gemini Service] Erro ao chamar a API do Gemini:", error);
-        // Retorna uma mensagem de erro genérica para o bot
+
         return "Desculpe, não consegui processar sua solicitação com a IA no momento.";
     }
 }
 
-export { analyzeAndSummarizeWithGemini }; // Exporta a função
+export { analyzeAndSummarizeWithGemini }; 
