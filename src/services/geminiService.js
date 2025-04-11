@@ -27,10 +27,12 @@ async function analyzeAndSummarizeWithGemini(userMessage) {
 
     const prompt = `
     Analise a seguinte mensagem de um usuário buscando suporte ou informação.
-    Seu objetivo é retornar uma resposta direta clara sobre o que a pessoa está perguntando.
+    Seu objetivo é retornar uma resposta direta, clara e resumida para a pessoa que está prestando o suporte.
     Utilize tópicos (bullet points) ou uma estrutura similar para facilitar a compreensão rápida.
     Identifique o ponto principal ou a dúvida do usuário.
     Se houver ações sugeridas, liste-as de forma concisa.
+    Após:
+    Em 4 ou 5 frases, forneça uma resposta que possa ser enviada diretamente ao usuário.
 
     Mensagem do usuário:
     "${userMessage}"
