@@ -54,8 +54,7 @@ async function startWppConnect() {
           '--disable-gpu', 
         ]
       },
-      folderNameToken: './src/whatsapp/session',
-      folderNameToken: join(__dirname, './whatsapp/api/tokens'),
+      folderNameToken: join(__dirname, './whatsapp/tokens'),
       keepAlive: true,
       catchQR: (base64Qr, asciiQR) => {
         console.log('--- QR Code ---');
