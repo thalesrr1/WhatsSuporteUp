@@ -5,7 +5,7 @@ import { dirname, join } from 'path'; // Importar 'join' para caminhos mais segu
 import dotenv from 'dotenv';
 
 // Importar o serviço Gemini (verifique se o caminho está correto)
-import { analyzeAndSummarizeWithGemini } from './services/geminiService.js';
+import { analyzeAndSummarizeWithGemini } from './whatsapp/services/geminiService.js';
 
 dotenv.config();
 
@@ -56,10 +56,9 @@ async function startWppConnect() {
           '--disable-gpu', // Pode ajudar em alguns ambientes
         ]
       },
-      browserSessionToken: {
-        // Usar 'join' para criar o caminho e uma pasta dedicada
-        folderName: join(__dirname, './whatsapp'),
-      },
+      folderNameToken: './src/whatsapp/api/tokens',
+      folderNameToken: join(__dirname, './whatsapp/api/tokens'),
+      keepAlive: true,
       catchQR: (base64Qr, asciiQR) => {
         console.log('--- QR Code ---');
         console.log('Escaneie o QR Code abaixo para conectar:');
