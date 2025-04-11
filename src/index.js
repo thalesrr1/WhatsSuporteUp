@@ -1,7 +1,7 @@
 import wppconnect from '@wppconnect-team/wppconnect';
 import express from 'express';
 import { fileURLToPath } from 'url';
-import { dirname } from 'path';
+import { dirname, join } from 'path';
 import dotenv from 'dotenv';
 
 import { analyzeAndSummarizeWithGemini } from './services/geminiService.js'; // 
@@ -11,6 +11,10 @@ dotenv.config();
 // Configuração para __dirname em ES Modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+
+// --- Variáveis Globais ---
+let client = null;
+const SESSION_NAME = 'SuportUp-session';
 
 // Configuração do servidor Express
 const app = express();
@@ -33,7 +37,7 @@ app.listen(PORT, () => {
 // Configuração do WPPConnect
 try {
   const client = await wppconnect.create({
-    session: 'SuportUp-session',
+    session: SESSION_NAME,
     puppeteerOptions: {
       headless: false,
       args: [
@@ -108,7 +112,7 @@ try {
     res.json({ 
       token: "seu-token-seguro-aqui",
       status: client ? "connected" : "disconnected",
-      session: "SuportUp-session"
+      session: SESSION_NAME
     });
   });
 
