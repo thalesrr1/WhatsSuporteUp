@@ -14,8 +14,6 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 // --- Variáveis Globais ---
-// É útil declarar 'client' fora do try/catch para acessá-lo nos handlers SIGINT/SIGTERM
-// Inicialize com null para poder verificar se foi criado com sucesso.
 let client = null;
 const SESSION_NAME = 'SuportUp-session'; // Definir nome da sessão como constante
 
@@ -27,15 +25,15 @@ const PORT = 21465;
 app.use(express.json());
 app.use(express.static('public')); // Para servir arquivos estáticos
 
-// Rota básica
+// --- Rota de Teste ---
 app.get('/', (req, res) => {
   res.send('WhatsApp Bot está online!');
 });
 
-// Rota da API para status/token (ainda insegura - veja comentários anteriores)
+// Rota da API para status/token
 app.get('/api/generate-token', (req, res) => {
   res.json({
-    token: "exemplo-token-seguro-!!!ATENCAO-INSEGURO!!!", // Mantenha o aviso
+    token: "exemplo-token-seguro-!!!ATENCAO-INSEGURO!!!",
     status: client ? "connected" : "disconnected", // Verifica o estado do client
     session: SESSION_NAME
   });
@@ -48,12 +46,12 @@ async function startWppConnect() {
     client = await wppconnect.create({
       session: SESSION_NAME,
       puppeteerOptions: {
-        headless: false, // Mantenha false para debug, true para produção
+        headless: false, 
         args: [
           '--no-sandbox',
           '--disable-setuid-sandbox',
           '--disable-dev-shm-usage',
-          '--disable-gpu', // Pode ajudar em alguns ambientes
+          '--disable-gpu', 
         ]
       },
       folderNameToken: './src/whatsapp/session',
@@ -68,12 +66,8 @@ async function startWppConnect() {
         console.log('--- Fim QR Code ---');
       },
       statusFind: (statusSession, sessionName) => {
-        // Corrigido: Usar os parâmetros corretos
         console.log('Status da sessão:', statusSession);
         console.log('Nome da sessão:', sessionName); // Usar sessionName
-        // Você pode adicionar lógicas aqui baseadas no status, ex:
-        // if (statusSession === 'isLogged') { console.log('Cliente totalmente logado!'); }
-        // if (statusSession === 'notLogged') { console.error('Cliente desconectado!'); }
       },
       logQR: true, // Mantém o log do QR
     });
@@ -86,7 +80,6 @@ async function startWppConnect() {
     console.log(`WhatsApp conectado com sucesso na sessão: ${SESSION_NAME}!`);
 
   } catch (error) {
-    // **CORRIGIDO:** Logar o erro real da inicialização
     console.error('Erro CRÍTICO ao iniciar ou conectar o WPPConnect:', error);
     process.exit(1); // Encerrar se a inicialização falhar
   }
@@ -96,7 +89,6 @@ async function startWppConnect() {
 function configureMessageListener(clientInstance) {
   clientInstance.onMessage(async (message) => {
         // --- LOG DETALHADO ---
-    // Log inicial para TODAS as mensagens recebidas ANTES de filtrar
     console.log(`[onMessage DEBUG] Received message object:`, {
       from: message.from,
       to: message.to,
