@@ -19,7 +19,14 @@ export async function handleMessage(client, message) {
     if (messageBodyLower === 'ping') {
         console.log(`[MessageHandler] [${senderNumber}] Ping command.`);
         try {
-            await client.sendText(senderNumber, 'pong 🏓');
+            await client.sendText(senderNumber, `
+                Olá! Sou seu assistente de treinos. Para montar sua ficha personalizada, preciso de algumas informações:
+                🚀Qual seu principal objetivo? (Ex: Hipertrofia, emagrecimento, resistência, força)
+                😎Quantos dias na semana pode treinar?
+                🤸Prefere divisão de treino: AB, ABC ou ABCD? (Ou outra, se tiver preferência)
+                🕺Tem restrições físicas ou equipamentos disponíveis? (Ex: Academia, casa, pesos livres)
+
+                Responda no formato que achar melhor, e já te envio um plano adaptado! 💪`);
             console.log(`[MessageHandler] [${senderNumber}] Pong sent.`);
         } catch (err) {
             console.error(`[MessageHandler] [${senderNumber}] Error sending pong:`, err);
