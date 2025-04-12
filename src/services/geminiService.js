@@ -85,4 +85,4 @@ async function analyzeAndSummarizeWithGemini(userMessage) {
 }
 
 // 7. Exporta a função com nome mais descritivo
-export { getSupportSummaryFromGemini };
+export { analyzeAndSummarizeWithGemini };
