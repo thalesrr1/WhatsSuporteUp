@@ -16,7 +16,7 @@ export default {
     paths: {
         root: ROOT_DIR,
         public: join(ROOT_DIR, 'public'),
-        session: join(__dirname, '..', 'whatsapp', 'token'), // Caminho para a pasta de sessão
+        session: join(__dirname, '..', 'whatsapp', 'tokens'), // Caminho para a pasta de sessão
         // Adicione outros caminhos se necessário
     },
     // Adicione outras configurações aqui (ex: JWT_SECRET se usar)
