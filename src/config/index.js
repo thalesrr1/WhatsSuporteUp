@@ -12,6 +12,7 @@ const ROOT_DIR = join(__dirname, '..', '..'); // Vai para a raiz do projeto
 export default {
     port: process.env.PORT || 21465,
     sessionName: process.env.WPP_SESSION_NAME || 'SuportUp-session',
+    modelGemini: process.env.GOOGLE_GEMINI_MODEL || 'gemini-1.5-flash',
     geminiApiKey: process.env.GOOGLE_GEMINI_API_KEY,
     paths: {
         root: ROOT_DIR,
