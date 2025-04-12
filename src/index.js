@@ -1,185 +1,82 @@
-import wppconnect from '@wppconnect-team/wppconnect';
-import express from 'express';
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path'; // Importar 'join' para caminhos mais seguros
-import dotenv from 'dotenv';
+import http from 'http'; //para ter controle sobre o servidor
+import config from './config/index.js';
+import app from './server/app.js'; // immporta o app Express configurado
+import { setClientStatusGetter } from './server/routes/index.js'; // Importa a função de setter e o getter de status
+import { startWhatsAppBot, closeWhatsAppBot, getStatus } from './whatsapp/client.js'; // Importa funções do cliente WPP
 
-// Importar o serviço Gemini (verifique se o caminho está correto)
-import { analyzeAndSummarizeWithGemini } from './services/geminiService.js';
+let httpServer = null;
 
-dotenv.config();
+// --- Configuração do Servidor Express ---
+setClientStatusGetter(getStatus);
 
-// Configuração para __dirname em ES Modules
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+// --- Função Principal de Inicialização ---
+async function start() {
+  console.log('[Main] Iniciando aplicação...');
 
-// --- Variáveis Globais ---
-let client = null;
-const SESSION_NAME = 'SuportUp-session'; // Definir nome da sessão como constante
+  // 1. Iniciar Servidor HTTP com o app Express
+  httpServer = http.createServer(app);
+  httpServer.listen(config.port, () => {
+    console.log(`[Main] Servidor Express rodando em http://localhost:${config.port}`);
 
-// Configuração do servidor Express
-const app = express();
-const PORT = 21465;
-
-// Middlewares
-app.use(express.json());
-app.use(express.static('public')); // Para servir arquivos estáticos
-
-// --- Rota de Teste ---
-app.get('/', (req, res) => {
-  res.send('WhatsApp Bot está online!');
-});
-
-// Rota da API para status/token
-app.get('/api/generate-token', (req, res) => {
-  res.json({
-    token: "exemplo-token-seguro-!!!ATENCAO-INSEGURO!!!",
-    status: client ? "connected" : "disconnected", // Verifica o estado do client
-    session: SESSION_NAME
-  });
-});
-
-// --- Função Principal Async para WPPConnect ---
-async function startWppConnect() {
-  try {
-    console.log('Iniciando conexão com o WhatsApp...');
-    client = await wppconnect.create({
-      session: SESSION_NAME,
-      puppeteerOptions: {
-        headless: false, 
-        args: [
-          '--no-sandbox',
-          '--disable-setuid-sandbox',
-          '--disable-dev-shm-usage',
-          '--disable-gpu', 
-        ]
-      },
-      folderNameToken: join(__dirname, './whatsapp/tokens'),
-      keepAlive: true,
-      catchQR: (base64Qr, asciiQR) => {
-        console.log('--- QR Code ---');
-        console.log('Escaneie o QR Code abaixo para conectar:');
-        console.log(asciiQR);
-        // TODO: Considerar salvar base64Qr em um arquivo ou enviá-lo para uma interface
-        // Ex: fs.writeFileSync(join(__dirname, 'qr.png'), Buffer.from(base64Qr.replace('data:image/png;base64,',''), 'base64'));
-        console.log('--- Fim QR Code ---');
-      },
-      statusFind: (statusSession, sessionName) => {
-        console.log('Status da sessão:', statusSession);
-        console.log('Nome da sessão:', sessionName); // Usar sessionName
-      },
-      logQR: true, // Mantém o log do QR
+    // 2. Iniciar o Bot WhatsApp SOMENTE APÓS o Express estar pronto
+    startWhatsAppBot().catch(err => {
+      console.error("[Main] Falha ao iniciar o bot WhatsApp após iniciar o servidor. Encerrando...", err);
+      gracefulShutdown('STARTUP_FAILURE'); // Tenta fechar o servidor se o bot falhar
     });
-
-    console.log('Cliente WPPConnect criado. Aguardando conexão...');
-
-    // --- Configuração dos Event Listeners ---
-    configureMessageListener(client);
-
-    console.log(`WhatsApp conectado com sucesso na sessão: ${SESSION_NAME}!`);
-
-  } catch (error) {
-    console.error('Erro CRÍTICO ao iniciar ou conectar o WPPConnect:', error);
-    process.exit(1); // Encerrar se a inicialização falhar
-  }
-}
-
-// --- Função para Configurar o Listener de Mensagens ---
-function configureMessageListener(clientInstance) {
-  clientInstance.onMessage(async (message) => {
-        // --- LOG DETALHADO ---
-    console.log(`[onMessage DEBUG] Received message object:`, {
-      from: message.from,
-      to: message.to,
-      body: message.body,
-      type: message.type, // Tipo da mensagem (chat, image, ptt, status_v3?)
-      isStatusMsg: message.isStatusMsg, // Flag específica de status
-      isGroupMsg: message.isGroupMsg,
-      author: message.author, // Útil em grupos
-      // Adicione outras propriedades que achar relevante do objeto 'message'
   });
-  // --- FIM LOG DETALHADO ---
 
-
-  // --- FILTRO REFORÇADO ---
-  // Ignorar mensagens:
-  // 1. Sem corpo (body)
-  // 2. Marcadas explicitamente como de Status (isStatusMsg)
-  // 3. Enviadas PARA o broadcast de status (from === 'status@broadcast')
-  // 4. De grupos (isGroupMsg)
-  if (!message.body ||
-      message.isStatusMsg ||
-      message.from === 'status@broadcast' || // Adiciona verificação explícita
-      message.isGroupMsg) {
-
-    console.log(`[onMessage FILTER] Mensagem ignorada. From: ${message.from}, isStatus: ${message.isStatusMsg}, isGroup: ${message.isGroupMsg}, Has Body: ${!!message.body}`);
-    return; // Sai da função se qualquer condição for verdadeira
-  }
-  // --- FIM FILTRO REFORÇADO ---
-
-
-    const senderNumber = message.from;
-    const messageBody = message.body; // Usar o corpo original para o Gemini
-    const messageBodyLower = messageBody.toLowerCase();
-
-    console.log(`[${senderNumber}] Mensagem recebida: "${messageBody}"`);
-
-    if (messageBodyLower === 'ping') {
-      console.log(`[${senderNumber}] Comando "ping" recebido.`);
-      try {
-        await clientInstance.sendText(senderNumber, 'pong 🏓');
-        console.log(`[${senderNumber}] Resposta "pong" enviada.`);
-      } catch (err) {
-        // **MELHORADO:** Log mais específico
-        console.error(`[${senderNumber}] Erro ao enviar "pong":`, err);
-      }
-    } else {
-      console.log(`[${senderNumber}] Enviando para análise do Gemini...`);
-      try {
-        // Chama a função do serviço Gemini
-        const geminiResponse = await analyzeAndSummarizeWithGemini(messageBody);
-
-        // Envia a resposta do Gemini de volta para o usuário
-        await clientInstance.sendText(senderNumber, geminiResponse);
-        console.log(`[${senderNumber}] Resposta do Gemini enviada.`);
-
-      } catch (error) {
-        console.error(`[${senderNumber}] Erro no fluxo Gemini ou envio da resposta:`, error);
-        try {
-          await clientInstance.sendText(senderNumber, '🤖 Desculpe, ocorreu um problema ao processar sua solicitação. Tente novamente.');
-        } catch (sendError) {
-          console.error(`[${senderNumber}] Falha CRÍTICA ao enviar mensagem de erro pós-Gemini:`, sendError);
-        }
-      }
-    }
+  httpServer.on('error', (error) => {
+    console.error('[Main] Erro no servidor HTTP:', error);
+    process.exit(1); // Erro crítico no servidor, encerra
   });
-  console.log('Listener de mensagens configurado.');
 }
-
 
 // --- Tratamento de Encerramento Gracioso ---
 async function gracefulShutdown(signal) {
-  console.log(`Recebido ${signal}. Desconectando o cliente WhatsApp...`);
-  if (client) {
-    try {
-      await client.close();
-      console.log('Cliente WhatsApp desconectado com sucesso.');
-    } catch (e) {
-      console.error('Erro ao desconectar o cliente durante shutdown:', e);
-    }
+  console.log(`[Main] Recebido ${signal}. Iniciando encerramento gracioso...`);
+
+  // 1. Parar de aceitar novas conexões HTTP
+  if (httpServer) {
+    console.log('[Main] Fechando servidor HTTP...');
+    httpServer.close(async (err) => {
+      if (err) {
+        console.error('[Main] Erro ao fechar servidor HTTP:', err);
+      } else {
+        console.log('[Main] Servidor HTTP fechado.');
+      }
+
+      // 2. Fechar conexão do WhatsApp APÓS fechar o servidor HTTP
+      await closeWhatsAppBot();
+
+      console.log('[Main] Encerramento concluído.');
+      process.exit(err ? 1 : 0); // Sai com código 1 se houve erro no fechamento do http
+    });
   } else {
-    console.log('Cliente não estava inicializado, encerrando.');
+    // Se o servidor não iniciou, apenas tenta fechar o bot (se existir)
+    await closeWhatsAppBot();
+    console.log('[Main] Encerramento concluído (servidor não estava rodando).');
+    process.exit(0);
   }
-  process.exit(0);
+
+  // Força o encerramento após um tempo limite se algo travar
+  setTimeout(() => {
+    console.error('[Main] Encerramento forçado após timeout.');
+    process.exit(1);
+  }, 10000); // Timeout de 10 segundos
 }
 
 process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
-
-// --- Inicialização ---
-// Inicia o servidor Express ANTES de iniciar o WPPConnect
-app.listen(PORT, () => {
-  console.log(`Servidor Express rodando em http://localhost:${PORT}`);
-  // Só inicia o WPPConnect depois que o Express está pronto
-  startWppConnect();
+process.on('uncaughtException', (error, origin) => {
+  console.error(`[Main] Exceção não capturada! Origin: ${origin}`, error);
+  // Considerar encerrar graciosamente ou apenas logar dependendo da severidade
+  gracefulShutdown('UNCAUGHT_EXCEPTION');
 });
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('[Main] Rejeição de Promise não tratada!', reason);
+  // Considerar encerrar graciosamente
+  gracefulShutdown('UNHANDLED_REJECTION');
+});
+
+// --- Iniciar a Aplicação ---
+start();
