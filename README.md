@@ -26,7 +26,7 @@ Antes de começar, certifique-se de ter instalado em sua máquina:
 * [Node.js](https://nodejs.org/) (v18 ou superior recomendada)
 * [npm](https://www.npmjs.com/) (geralmente incluído com o Node.js)
 * Um número de telefone com WhatsApp ativo para uso do bot
-* Uma chave de API válida do [Google AI Studio (Gemini)](https://aistudio.google.com/app/apikey)
+* Obter uma chave de API válida do [Google AI Studio (Gemini)](https://aistudio.google.com/app/apikey)
 
 ## 🚀 Instalação
 
