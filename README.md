@@ -8,7 +8,6 @@
 
 Um assistente inteligente para WhatsApp que utiliza a biblioteca WPPConnect para integração com WhatsApp Web e a API Google Gemini para análise avançada de mensagens e geração de respostas contextuais ou resumos.
 
-![WhatsApp Bot Demo](https://via.placeholder.com/800x400?text=WhatsApp+Bot+Demo)
 
 ## ✨ Funcionalidades Principais
 
